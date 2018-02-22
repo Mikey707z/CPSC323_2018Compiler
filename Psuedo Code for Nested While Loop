@@ -1,0 +1,34 @@
+
+int i = 0;
+char n = nextchar()
+while (n != ' ' && n != ',' && n != '(' && n != ')' && n!='$')
+{
+     word_[i].pushback(n);
+     if (n == letter && (state == b || state == a))
+
+          state == b;
+     else if (n == num && (state == c || state == a))
+          state == c;
+     else if (n == '.' && state == c)
+          state == d;
+     else
+          state = e;
+
+     
+}
+
+if (state == a)
+{
+     if (n == '!')
+     {
+          n = nextchar();
+          while (n != '!')
+               n = nextchar();
+     }
+}
+else if (state == b)
+{
+     word_[i].type = b;
+     i++;
+}
+
