@@ -1,0 +1,33 @@
+! this is comment for this sample code that returns the string "hello world" !
+
+function hello$ []
+{
+           return "hello world";
+}
+
+%%
+
+! this is a comment for this sample code that does math !
+
+function sum$ [num1:int, num2:int]
+{
+	return num1 + num2;
+}
+
+function product$ [num1:int, num2:int]
+{
+	return num1 * num2;
+}
+
+function quotient$ [num1:int, num2:int]
+{
+	num1/num2;
+}
+
+%%
+	int sum, product, quotient$; 
+	
+	put sum(sum$[3,5]);
+	put product(product$[3,5]);
+	put quotient(quotient$[3,5]);
+	
