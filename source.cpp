@@ -1,5 +1,6 @@
 //Names: Dhvanil Shah
 //       Ruby Abutaleb
+//       Mike Kaminsky
 //Due Date: 4/9/2018
 //Class: CPSC-323-04
 //Project 2
@@ -465,19 +466,32 @@ void synt(Token first, Token second){
         case 3:
             if(first.lexeme == "return")
                 {
-                    cout << "<Statement> -> <Return>\n" << "<Return> -> return\n";
+                    //check if second is an expression : if "-", identifier, integer, "(", real, "true", "false" empty???
+                    //possible productions: Statement -> Return -> return;
+                    //or                    Statement -> Return -> return; <Expression>
+                    if(second.lexeme == "-" || second.type == 0 || second.type == 2 || second.lexeme == "(" || second.type == 1 ||second.lexeme == "true" || second.lexeme == "false"){
+                        cout << "Statement> -> <Return>\n" << "<Return> -> return; <Expression>\n";
+                    }
+                    else {
+                         cout << "<Statement> -> <Return>\n" << "<Return> -> return;\n";
+                    }
                 }
+                    //only one possible production rule
             else if (first.lexeme == "function"){  //factorization rule #4
-                cout << "\n";
+                cout << "<Function Definitions’> -> <Function> <Function Definition’>\n" << "<Function> -> function  <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>";
                 }
+                    //Possible productions: Factor -> Primary -> Integer
+                    //or                    Parameter -> Qualifier -> int
             else if (first.lexeme == "int"){
-                cout << "\n";
+                cout << "<Factor> -> <Primary>\n" << "<Primary> -> <Integer>\n";
                 }
+                    //only one possible production rule
             else if (first.lexeme == "boolean"){
-                cout << "\n";
+                cout << "<Parameter> -> <IDs> : <Qualifier>\n" << "<Qualifier> -> boolean\n";
             }
+            
             else if (first.lexeme == "real"){
-                cout << "\n";
+                cout << "<Parameter> -> <IDs> : <Qualifier>\n" << "<Qualifier> -> real\n";
             }
             else if (first.lexeme == "if"){
                 cout << "\n";
@@ -594,3 +608,4 @@ int main() {
     system("Pause");
     return 0;
 }
+
