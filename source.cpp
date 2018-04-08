@@ -1,5 +1,6 @@
 //Names: Dhvanil Shah
 //       Ruby Abutaleb
+//       Mike Kaminski
 //Due Date: 4/9/2018
 //Class: CPSC-323-04
 //Project 2
@@ -523,7 +524,7 @@ void synt(Token before, Token curr, Token after){
                     //possible productions: Statement -> Return -> return;
                     //or                    Statement -> Return -> return; <Expression>
                     if(before.lexeme == "-" || after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 ||after.lexeme == "true" || after.lexeme == "false"){
-                        cout << "Statement> -> <Return>\n" << "<Return> -> return; <Expression>\n";
+                        cout << "<Statement> -> <Return>\n" << "<Return> -> return; <Expression>\n";
                     }
                     else {
                          cout << "<Statement> -> <Return>\n" << "<Return> -> return;\n";
@@ -690,13 +691,13 @@ void synt(Token before, Token curr, Token after){
                             cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> ==\n";
                         // ^=
                         else if (before.lexeme == "^")
-                            cout << "Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> ^=\n";
+                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> ^=\n";
                         // =>
                         else if (after.lexeme == ">")
-                            cout << "Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =>\n";
+                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =>\n";
                         // =<
                         else if (after.lexeme == "<")
-                            cout << "Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =<\n";
+                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =<\n";
                     }
                     else{
                         cout << "Invalid token, no production identified for: " << curr.lexeme << " lexeme of token type: " << curr.type << endl;
