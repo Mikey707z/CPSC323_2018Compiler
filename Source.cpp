@@ -1,5 +1,6 @@
 //Names: Dhvanil Shah
 //       Ruby Abutaleb
+//       Mike Kaminski
 //Due Date: 4/9/2018
 //Class: CPSC-323-04
 //Project 2
@@ -433,8 +434,7 @@ void lex(char *buffer, ofstream &out) {
                                 cout << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
                                 //Send to output file
                                 out << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
-                                cc++;
-                                go = first;
+                               
                                 
                                 new_token->type = 4;
                                 new_token->lexeme = *cc;
@@ -449,6 +449,8 @@ void lex(char *buffer, ofstream &out) {
                                     follow = current;
                                 }
                                 
+                                cc++;
+                                go = first;
                                 break;
                             }
                         }
@@ -519,9 +521,7 @@ void lex(char *buffer, ofstream &out) {
                     cout << setw(20) << left << "Separator" << *cc << setw(20) << right << endl;
                     //sendto output file
                     out << setw(20) << left << "Separator" << *cc << setw(20) << right << endl;
-                    cc++;
-                    st = cc;
-                    go = first;
+                   
                     
                     new_token->type = 5;
                     new_token->lexeme = *cc;
@@ -535,6 +535,11 @@ void lex(char *buffer, ofstream &out) {
                         current->prev = follow;
                         follow = current;
                     }
+
+
+                    cc++;
+                    st = cc;
+                    go = first;
                     break;
                 }
                 //Else if an operator that is read is a =,<,>,^, or %, check whether or not its a compound operator or compound separator
@@ -670,7 +675,7 @@ void lex(char *buffer, ofstream &out) {
 
 
 void parser() {
-    
+     curr = head;
     before = after = curr;
     do {
         after = curr->next;
@@ -678,60 +683,87 @@ void parser() {
                 //case for identifiers
             case 0:
                     //if before is "function"
-                        if (before->lexeme == "function")
-                            cout << "   <Function Definitions'> -> <Function> <Function Definitions'>\n" << "   <Function> -> function <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>\n";
-                        //if before is "int", "boolean", or "real"
-                        else if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
-                            if (after->lexeme == ",")
-                                cout << "   <Decleration List'> -> <Decleration>\n" << "    <Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>, <IDs>\n";
-                            else
-                                cout << "   <Decleration List'> -> <Decleration>\n" << "    <Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>\n";
-                        }
-                        //before is -
-                        else if (before->lexeme == "-") {
-                            cout << "   <Factor> -> - <Primary>\n" << " <Primary> -> <Identifier>\n";
-                        }
-                        //before is /
-                        else if (before->lexeme == "/") {
-                            cout << "   <Term''> -> /<Factor><Term''>\n" << "   <Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
-                        }
-                        //before is *
-                        else if (before->lexeme == "*") {
-                            cout << "   <Term'> - > *<Factor><Term'>\n" << "    <Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
-                        }
-                        //before is +
-                        else if (before->lexeme == "+") {
-                            cout << "   <Expression'> -> +<Term> <Expression'>\n" << "  <Term> -> <Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
-                        }
-                        //before is = or < or >
-                        else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
-                            cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
-                        }
-                        else {
-                            cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
-                        }
+                if (before->lexeme == "function"){
+                    cout <<  setw(30) << left << "Token: " << curr->type << " Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Function Definitions'> -> <Function> <Function Definitions'>\n" << "   <Function> -> function <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>\n";
+                }
+                //if before is "int", "boolean", or "real"
+                else if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                    if (after->lexeme == ","){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Decleration List'> -> <Decleration>\n" << "    <Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>, <IDs>\n";
+                    }
+                    else{
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Decleration List'> -> <Decleration>\n" << "    <Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>\n";
+                    }
+                }
+                //before is [ or ]
+                else if (before->lexeme == "[" || before->lexeme == "]") {
+                     cout << setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
+                     cout << "   <Function> -> function <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>\n";
+                }
+                //before is (
+                else if (before->lexeme == "(") {
+                     cout << setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
+                     cout << "   <Statement> -> <Print>\n" << "   <Print> -> put (<Expression>);\n";
+                }
+                //before is -
+                else if (before->lexeme == "-") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Factor> -> - <Primary>\n" << " <Primary> -> <Identifier>\n";
+                }
+                //before is /
+                else if (before->lexeme == "/") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term''> -> /<Factor><Term''>\n" << "   <Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
+                }
+                //before is *
+                else if (before->lexeme == "*") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term'> - > *<Factor><Term'>\n" << "    <Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
+                }
+                //before is +
+                else if (before->lexeme == "+") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Expression'> -> +<Term> <Expression'>\n" << "  <Term> -> <Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
+                }
+                //before is = or < or >
+                else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
+                }
+                else {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
+                }
                 break;
                 
                 //case for real
             case 1:
                 //before is -
                 if (before->lexeme == "-") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
                 //before is /
                 else if (before->lexeme == "/") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Term''> -> /<Factor><Term''>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
                 //before is *
                 else if (before->lexeme == "*") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Term'> - > *<Factor><Term'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
                 //before is +
                 else if (before->lexeme == "+") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Expression'> -> +<Term> <Expression'>\n" << "   <Term> -> <Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
                 //before is = or < or >
                 else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
                 //error message
@@ -744,25 +776,31 @@ void parser() {
             case 2:
                 //before is -
                 if (before->lexeme == "-") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
                 //before is /
                 else if (before->lexeme == "/") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Term''> -> /<Factor><Term''>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
                 //before is *
                 else if (before->lexeme == "*") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Term'> - > *<Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
                 //before is +
                 else if (before->lexeme == "+") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Expression'> -> +<Term> <Expression'>\n" << "   <Term> -> <Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
                 //before is = or < or >
                 else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Expression> -> <Term> <Expression'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
                 else {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Factor>-> <Primary>\n" << "    <Primary> -> <Integer>\n";
                 }
                 break;
@@ -772,9 +810,11 @@ void parser() {
                 //return
                 if (curr->lexeme == "return") {
                     if (before->lexeme == "-" || after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
-                        cout << "   Statement> -> <Return>\n" << "   <Return> -> return; <Expression>\n";
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <Return>\n" << "   <Return> -> return; <Expression>\n";
                     }
                     else if(after->lexeme == ";"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement> -> <Return>\n" << "   <Return> -> return;\n";
                     }
                     else {
@@ -784,7 +824,8 @@ void parser() {
                 // function
                 else if (curr->lexeme == "function") {
                     if (after->type == 0) {
-                        cout << "   <Function Definitions> -> <Function> <Function Definition>\n" << "   <Function> -> function  <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>";
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Function Definitions> -> <Function> <Function Definition>\n" << "   <Function> -> function  <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>" << endl;
                     }
                     else {
                         cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
@@ -793,9 +834,11 @@ void parser() {
                 // int
                 else if (curr->lexeme == "int") {
                     if (before->lexeme == ":") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "  <Parameter> -> <IDs> : <Qualifier>\n" << "  <Qualifier> -> int\n";
                     }
                     else if(after->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Declaration List>-> <Declaration>\n" << "  <Declaration> -> <int> <IDs>\n";
                     }
                     else {
@@ -805,9 +848,11 @@ void parser() {
                 // boolean
                 else if (curr->lexeme == "boolean") {
                     if (before->lexeme == ":") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Parameter> -> <IDs> : <Qualifier>\n" << "   <Qualifier> -> boolean\n";
                     }
                     else if(after->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Declaration List>-> <Declaration>\n" << "  <Declaration> -> <boolean> <IDs>\n";
                     }
                     else {
@@ -818,10 +863,12 @@ void parser() {
                 else if (curr->lexeme == "real") {
                     //if before is :
                     if (before->lexeme == ":") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Parameter> -> <IDs> : <Qualifier>\n" << "   <Qualifier> -> real\n";
                     }
                     //if after is identifier
                     else if (after->type == 0) {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Declaration List> -> <Declaration>; <Declaration List'>\n" << "   <Declaration> -> real <IDs>\n";
                     }
                     //error message
@@ -832,6 +879,7 @@ void parser() {
                 //if
                 else if (curr->lexeme == "if") {
                     if(after->lexeme == "("){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement> -> <If>\n" << "   <If> -> if(<Condition>) <Statement><If'>\n";
                     }
                     else {
@@ -841,6 +889,7 @@ void parser() {
                 //endif
                 else if (curr->lexeme == "endif") {
                     if(before->lexeme == "}" || before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "="){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <If> -> if(<Condition>) <Statement><If'>\n" << "   <If'> -> endif\n";
                     }
                     else {
@@ -851,6 +900,7 @@ void parser() {
                 //else
                 else if (curr->lexeme == "else") {
                     if(before->lexeme == "}" || before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "="){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <If> -> if(<Condition>) <Statement><If'>\n" << "   <If'> -> else <Statement> endif\n";
                     }
                     else {
@@ -860,6 +910,7 @@ void parser() {
                 // put
                 else if (curr->lexeme == "put") {
                     if (after->lexeme == "(") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement> -> <Print>\n" << "   <Print> -> put (<Expression>);\n";
                     }
                     else {
@@ -869,6 +920,7 @@ void parser() {
                 // get
                 else if (curr->lexeme == "get") {
                     if (after->lexeme == "(") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement> -> <Scan>\n" << "    <Scan> -> get (<IDs>);\n";
                     }
                     else {
@@ -878,6 +930,7 @@ void parser() {
                 // while
                 else if (curr->lexeme == "while") {
                     if (after->lexeme == "(") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement> -> <While>\n" << "   <While> -> while (<Condition>) <Statement>\n";
                     }
                     else {
@@ -886,17 +939,25 @@ void parser() {
                 }
                 // true
                 else if (curr->lexeme == "true") {
-                    if (before->lexeme == "-")
+                    if (before->lexeme == "-"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> true\n";
-                    else
+                    }
+                    else{
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> true\n";
+                    }
                 }
                 // false
                 else if (curr->lexeme == "false") {
-                    if (before->lexeme == "-")
+                    if (before->lexeme == "-"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> false\n";
-                    else
+                    }
+                    else{
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> false\n";
+                    }
                 }
                 break;
                 
@@ -907,13 +968,16 @@ void parser() {
                     //check if before and after is term
                     if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Expression> -> <Term> <Expression'>\n" << "   <Expression'> -> +<Term><Expression'>\n";
                         }
                         else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                         }
                     }
                     else {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                     }
                 }
@@ -922,9 +986,11 @@ void parser() {
                     //check if before and after is term or primary
                     if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Expression> -> <Term> <Expression''>\n" << "   <Expression''> -> -<Term> <Expression'>\n";
                         }
                         else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                         }
                     }
@@ -937,9 +1003,11 @@ void parser() {
                     //check if before and after is factor/primary
                     if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Term> -> <Factor> <Term'>\n" << "   <Term'> -> *<Factor><Term'>\n";
                         }
                         else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                         }
                     }
@@ -952,6 +1020,7 @@ void parser() {
                     //check if after is factor
                     if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Term> -> <Factor> <Term''>\n" << "   <Term'> -> /<Factor><Term''>\n";
                         }
                         else {
@@ -969,17 +1038,25 @@ void parser() {
                     if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "=" || before->lexeme == "^") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false" || after->lexeme == "=" || after->lexeme == "<" || after->lexeme == ">") {
                             // ==
-                            if (before->lexeme == "=" || after->lexeme == "=")
+                            if (before->lexeme == "=" || after->lexeme == "="){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ==\n";
+                            }
                             // ^=
-                            else if (before->lexeme == "^")
-                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ^=\n";
+                            else if (before->lexeme == "^"){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ^=\n";
+                            }
                             // =>
-                            else if (after->lexeme == ">")
-                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =>\n";
+                            else if (after->lexeme == ">"){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =>\n";
+                            }
                             // =<
-                            else if (after->lexeme == "<")
-                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
+                            else if (after->lexeme == "<"){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
+                            }
                         }
                         else {
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
@@ -995,11 +1072,15 @@ void parser() {
                     if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "=") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
                             // =<
-                            if (before->lexeme == "=")
+                            if (before->lexeme == "="){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
+                            }
                             // <
-                            else
+                            else{
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> <\n";
+                            }
                         }
                         else {
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
@@ -1015,11 +1096,15 @@ void parser() {
                     if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "=") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
                             // =<
-                            if (before->lexeme == "=")
+                            if (before->lexeme == "="){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =>\n";
+                            }
                             // <
-                            else
+                            else{
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> >\n";
+                            }
                         }
                         else {
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
@@ -1047,6 +1132,7 @@ void parser() {
                 if (curr->lexeme == "[") {
                     if (before->type == 0) {
                         if (after->lexeme == "]" || after->type == 0) {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Function Definitions'> -> <Function><Function Definitions'>\n" << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
                         }
                         else {
@@ -1056,8 +1142,9 @@ void parser() {
                 }
                 // ]
                 else if (curr->lexeme == "]") {
-                    if (before->lexeme == "[" || before->type == 0) {
-                        if (after->lexeme == "int" || after->lexeme == "boolean" || after->lexeme == "real") {
+                    if (before->lexeme == "[" || before->type == 3) {
+                        if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Function Definitions'> -> <Function><Function Definitions'>\n" << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
                         }
                         else {
@@ -1072,9 +1159,11 @@ void parser() {
                 else if (curr->lexeme == "{") {
                     if (after->type == 0 || after->lexeme == "endif" || after->lexeme == "return" || after->lexeme == "put" || after->lexeme == "while" || before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
                         if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration> <Body>\n" << "   <Body> -> {<Statement List>}\n";
                         }
                         else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Statement> -> <Compound>\n" << "   <Compound> -> {<Statement List>}\n";
                         }
                     }
@@ -1084,7 +1173,8 @@ void parser() {
                 }
                 // }
                 else if (curr->lexeme == "}") {
-                    if (before->type == 0 || before->lexeme == "endif" || before->lexeme == "return" || before->lexeme == "put" || before->lexeme == "while") {
+                    if (before->type == 0 || before->lexeme == "endif" || before->lexeme == "return" || before->lexeme == "put" || before->lexeme == "while"|| before->type == 5) {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement> -> <Compound>\n" << "   <Compound> -> {<Statement List>}\n";
                     }
                     else {
@@ -1096,26 +1186,34 @@ void parser() {
                     if (before->lexeme == "put" || before->lexeme == "get" || before->lexeme == "while") {
                         if (before->lexeme == "put") {
                             //if after is an identifier or an expression
-                            if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/" || after->type == 0)
+                            if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/" || after->type == 0){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Statement> -> <Print>\n" << "   <Print> -> put(<Expression>);\n";
+                            }
                         }
                         else if (before->lexeme == "get") {
                             //if after is an Identifier
-                            if (after->type == 0)
+                            if (after->type == 0){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Statement> -> <Scan>\n" << "   <Scan> -> get(<IDs>);\n";
+                            }
                         }
                         else if (before->lexeme == "while") {
                             //if after is an expression or identifier
-                            if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/" || after->type == 0)
+                            if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/" || after->type == 0){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Statement> -> <While>\n" << "   <While> -> while(<Condition>)<Statement>\n";
+                            }
                         }
                     }
-                    //if after is an expression
-                    else if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/") {
+                    //if part of an expression
+                    else if (before->lexeme == "+" || before->lexeme == "-" || before->lexeme == "*" || before->lexeme == "/") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> (<Expression>)\n";
                     }
                     //if before and after is an identifier
                     else if (after->type == 0 && before->type == 0) {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier><Primary'>\n" << "   <Primary'> -> (<IDs>)\n";
                     }
                     else {
@@ -1124,7 +1222,8 @@ void parser() {
                 }
                 else if (curr->lexeme == ")") {
                     //if before is an expression
-                    if (before->lexeme == "true" || before->lexeme == "false" || before->type == 2 || before->type == 1){
+                    if (before->lexeme == "true" || before->lexeme == "false" || before->type == 2 || before->type == 1 || before-> lexeme == ")" || after->lexeme == ")"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> (<Expression>)\n";
                     }
                     else {
@@ -1135,9 +1234,11 @@ void parser() {
                     // before is an identifier and after is a qualifier
                     if(before->type == 0){
                         if(after->lexeme == "int" || after->lexeme == "boolean" || after->lexeme == "real"){
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Parameter List> -> <Parameter> <Paramater List'>\n" << "   <Parameter> -> <IDs> : <Qualifier>\n";
                         }
                         else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                         }
                     }
@@ -1149,14 +1250,19 @@ void parser() {
                 else if (curr->lexeme == ";") {
                     //before is a delcaration
                     if(before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real" || before->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Opt Declaration List> -> <Declaration List>\n" << "    <Declaration List> -> <Decleration>;<Declaration List'>\n";
                     }
                     //before is end parenthesis
-                    else if(before->lexeme == ")")
+                    else if(before->lexeme == ")"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement> -> <Print>\n" << "  <Print> -> put(<Expression>);\n";
+                    }
                     //before is expression
-                    else if(before->lexeme == "true" || before->lexeme == "false" || before->type == 2 || before->type == 1)
+                    else if(before->lexeme == "true" || before->lexeme == "false" || before->type == 2 || before->type == 1){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <Statement>-> <Assign>\n" << "  <Assign> -><Identifier> = <Expression>;\n";
+                    }
                     else {
                         cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                     }
@@ -1164,6 +1270,7 @@ void parser() {
                 else if (curr->lexeme == ",") {
                     //if before or after is an identifier
                     if(before->type == 0 || after->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                         cout << "   <IDs> -> <ID's>\n" << " <IDs'> -> <Identifier>,<IDs'>\n";
                     }
                     else {
@@ -1175,7 +1282,7 @@ void parser() {
                 else if (curr->lexeme == "%") {
                     //if before or after is %
                     if(before->lexeme == "%" || after->lexeme == "%"){
-                        cout << "   Rat18s> -> <Opt Function Definitions> %% <Opt Declaration List> <Statement List>\n";
+                        cout << "   <Rat18s> -> <Opt Function Definitions> %% <Opt Declaration List> <Statement List>\n";
                     }
                     else {
                         cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
