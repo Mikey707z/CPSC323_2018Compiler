@@ -20,7 +20,7 @@ const string compound_ops = "=<>^";
 const string compound_sps = "%";
 
 //Create Token Struct for doubly linked list used by Parser
-struct Token{
+struct Token {
     int type; // 0 = identifier, 1 = real, 2 = int, 3 = keywords, 4 = operators, 5 = seperators
     string lexeme;
     int line;
@@ -28,32 +28,34 @@ struct Token{
     struct Token *prev;
     
     //set type function
-    void setType(int num){
+    void setType(int num) {
         type = num;
     }
     //set lexeme function
-    void setLex(string var){
+    void setLex(string var) {
         lexeme = var;
     }
     
     //set line number
-    void setLine(int num){
+    void setLine(int num) {
+        num = 0;
         line = num;
     }
     
     //get type function
-    int getType(){
+    int getType() {
         return type;
     }
     //get lexeme function
-    string getLex(){
+    string getLex() {
         return lexeme;
     }
     //get line number
-    int getLine(){
+    int getLine() {
         return line;
     }
 };
+
 
 
 //Create an enumerated state transition type
@@ -75,10 +77,13 @@ enum state {
 state go = first;
 
 
+Token *head, *before, *curr, *after, *current, *follow;
+
+
 //Function to determine tokens and lexemes from
 //Accepts a pointer to an array of char, inputted from a text file
 void lex(char *buffer, ofstream &out) {
-    
+    head = before = curr = after = follow = nullptr;
     //Declare Current character pointer, and a start pointer
     char *cc, *st;
     
@@ -100,7 +105,13 @@ void lex(char *buffer, ofstream &out) {
         //Internal loop that will iterate through each character of array
         //until an accepting state is found for each token
         
+        Token *new_token = new Token;
+        new_token->next = nullptr;
+        new_token->prev = nullptr;
+        current = new_token;
+        
         switch (go) {
+                
                 
                 //Case for the starting state
             case first:
@@ -144,7 +155,7 @@ void lex(char *buffer, ofstream &out) {
                 //If an operator, or separator is read, the statement will transition the go object
                 //to c, that will annouce opearators or separators
                 if (oper.find(*cc) != std::string::npos || sps.find(*cc) != std::string::npos ||
-                    compound_ops.find(*cc) != std::string::npos ||compound_sps.find(*cc) != std::string::npos){
+                    compound_ops.find(*cc) != std::string::npos || compound_sps.find(*cc) != std::string::npos) {
                     go = h;
                     break;
                 }
@@ -205,13 +216,43 @@ void lex(char *buffer, ofstream &out) {
                 //Announce a token identifer or keyword
                 if (toks == "function" || toks == "int" || toks == "boolean" || toks == "real" ||
                     toks == "if" || toks == "endif" || toks == "else" || toks == "return" ||
-                    toks == "put" || toks == "get" || toks == "while" || toks == "true" || toks == "false"){
+                    toks == "put" || toks == "get" || toks == "while" || toks == "true" || toks == "false") {
                     cout << setw(20) << left << "Keyword" << toks << setw(20) << right << endl;
+                    
+                    new_token->type = 3;
+                    new_token->lexeme = toks;
+                    
+                    if (head == nullptr) {
+                        head = current;
+                        follow = head;
+                        curr = head;
+                    }
+                    else {
+                        follow->next = current;
+                        current->prev = follow;
+                        follow = current;
+                    }
+                    
                 }
                 else {
                     cout << setw(20) << left << "Idenfier" << toks << setw(20) << right << endl;
                     //Send to output file
                     out << setw(20) << left << "Idenfier" << toks << setw(20) << right << endl;
+                    
+                    //Create a node
+                    new_token->type = 0;
+                    new_token->lexeme = toks;
+                    if (head == nullptr) {
+                        head = current;
+                        follow = head;
+                        curr = head;
+                    }
+                    else {
+                        follow->next = current;
+                        current->prev = follow;
+                        follow = current;
+                    }
+                    
                 }
                 go = first;
                 break;
@@ -230,6 +271,22 @@ void lex(char *buffer, ofstream &out) {
                 cout << setw(20) << left << "Identifier" << toks << setw(20) << right << endl;
                 //Send to output file
                 out << setw(20) << left << "Identifier" << toks << setw(20) << right << endl;
+                
+                new_token->type = 0;
+                new_token->lexeme = toks;
+                
+                if (head == nullptr) {
+                    head = current;
+                    follow = head;
+                    curr = head;
+                }
+                else {
+                    follow->next = current;
+                    current->prev = follow;
+                    follow = current;
+                }
+                
+                
                 st = cc;
                 go = first;
                 break;
@@ -253,9 +310,9 @@ void lex(char *buffer, ofstream &out) {
                     cc++;
                 }
                 //If anything except a letter or $ sign is read after a digit, announce an invalid identifier
-                else if (*cc == char(32) || *cc == char(9) ||*cc == char(10)||
+                else if (*cc == char(32) || *cc == char(9) || *cc == char(10) ||
                          oper.find(*cc) != std::string::npos || sps.find(*cc) != std::string::npos ||
-                         compound_ops.find(*cc) != std::string::npos ||compound_sps.find(*cc) != std::string::npos) {
+                         compound_ops.find(*cc) != std::string::npos || compound_sps.find(*cc) != std::string::npos) {
                     toks = "";
                     while (st != cc) {
                         toks += *st;
@@ -291,6 +348,20 @@ void lex(char *buffer, ofstream &out) {
                         out << setw(20) << left << "Integer" << toks << setw(20) << right << endl;
                         st = cc;
                         go = first;
+                        
+                        new_token->type = 2;
+                        new_token->lexeme = toks;
+                        if (head == nullptr) {
+                            head = current;
+                            follow = head;
+                            curr = head;
+                        }
+                        else {
+                            follow->next = current;
+                            current->prev = follow;
+                            follow = current;
+                        }
+                        
                         break;
                     }
                 }//End f
@@ -317,6 +388,19 @@ void lex(char *buffer, ofstream &out) {
                 out << setw(20) << left << "Real" << toks << setw(20) << right << endl;
                 st = cc;
                 go = first;
+                new_token->type = 1;
+                new_token->lexeme = toks;
+                
+                if (head == nullptr) {
+                    head = current;
+                    follow = head;
+                    curr = head;
+                }
+                else {
+                    follow->next = current;
+                    current->prev = follow;
+                    follow = current;
+                }
                 break;
             }
                 //End case g
@@ -351,6 +435,20 @@ void lex(char *buffer, ofstream &out) {
                                 out << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
                                 cc++;
                                 go = first;
+                                
+                                new_token->type = 4;
+                                new_token->lexeme = *cc;
+                                if (head == nullptr) {
+                                    head = current;
+                                    follow = head;
+                                    curr = head;
+                                }
+                                else {
+                                    follow->next = current;
+                                    current->prev = follow;
+                                    follow = current;
+                                }
+                                
                                 break;
                             }
                         }
@@ -363,11 +461,25 @@ void lex(char *buffer, ofstream &out) {
                                 }
                             }
                             //If its a valid unary operator, announce a valid unary operator
-                            if (sps.find(*unary) != string::npos || compound_ops.find(*unary) != string:: npos|| compound_sps.find(*unary) != string::npos) {
+                            if (sps.find(*unary) != string::npos || compound_ops.find(*unary) != string::npos || compound_sps.find(*unary) != string::npos) {
                                 cout << setw(20) << left << "Unary Operator" << *cc << setw(20) << right << endl;
                                 //Send to output file
                                 out << setw(20) << left << "Unary Operator" << *cc << setw(20) << right << endl;
                                 cc++;
+                                
+                                new_token->type = 4;
+                                new_token->lexeme = *cc;
+                                if (head == nullptr) {
+                                    head = current;
+                                    follow = head;
+                                    curr = head;
+                                }
+                                else {
+                                    follow->next = current;
+                                    current->prev = follow;
+                                    follow = current;
+                                }
+                                
                                 go = first;
                                 break;
                             }
@@ -378,6 +490,22 @@ void lex(char *buffer, ofstream &out) {
                                 out << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
                                 cc++;
                                 go = first;
+                                
+                                
+                                
+                                new_token->type = 4;
+                                new_token->lexeme = *cc;
+                                if (head == nullptr) {
+                                    head = current;
+                                    follow = head;
+                                    curr = head;
+                                }
+                                else {
+                                    follow->next = current;
+                                    current->prev = follow;
+                                    follow = current;
+                                }
+                                
                                 break;
                             }
                             
@@ -394,6 +522,19 @@ void lex(char *buffer, ofstream &out) {
                     cc++;
                     st = cc;
                     go = first;
+                    
+                    new_token->type = 5;
+                    new_token->lexeme = *cc;
+                    if (head == nullptr) {
+                        head = current;
+                        follow = head;
+                        curr = head;
+                    }
+                    else {
+                        follow->next = current;
+                        current->prev = follow;
+                        follow = current;
+                    }
                     break;
                 }
                 //Else if an operator that is read is a =,<,>,^, or %, check whether or not its a compound operator or compound separator
@@ -404,17 +545,47 @@ void lex(char *buffer, ofstream &out) {
                     st = f;
                     //If it is a compound operator or compound separator, announce a token
                     if (*f == char(9) || *f == char(10) || *f == char(32) || isalpha(*f) || isdigit(*f)
-                        || oper.find(*f) != string::npos || sps.find(*f) != string::npos){
+                        || oper.find(*f) != string::npos || sps.find(*f) != string::npos) {
                         if (compound_ops.find(*cc) != std::string::npos) {
                             cout << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
                             //Send to output file
                             out << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
+                            
+                            new_token->type = 4;
+                            new_token->lexeme = *cc;
+                            if (head == nullptr) {
+                                head = current;
+                                follow = head;
+                                curr = head;
+                            }
+                            else {
+                                follow->next = current;
+                                current->prev = follow;
+                                follow = current;
+                            }
+                            
                         }
                         
                         else if (compound_sps.find(*cc) != std::string::npos) {
                             cout << setw(20) << left << "Separator" << *cc << setw(20) << right << endl;
                             //Send to output file
                             out << setw(20) << left << "Separator" << *cc << setw(20) << right << endl;
+                            
+                            
+                            new_token->type = 5;
+                            new_token->lexeme = *cc;
+                            
+                            if (head == nullptr) {
+                                head = current;
+                                follow = head;
+                                curr = head;
+                            }
+                            else {
+                                follow->next = current;
+                                current->prev = follow;
+                                follow = current;
+                            }
+                            
                         }
                         st = cc = f;
                         go = first;
@@ -433,11 +604,36 @@ void lex(char *buffer, ofstream &out) {
                             //Sendto output file
                             out << setw(20) << left << "Operator" << toks << setw(20) << right << endl;
                             
+                            new_token->type = 4;
+                            new_token->lexeme = toks;
+                            if (head == nullptr) {
+                                head = current;
+                                follow = head;
+                                curr = head;
+                            }
+                            else {
+                                follow->next = current;
+                                current->prev = follow;
+                                follow = current;
+                            }
                         }
                         else if (compound_sps.find(*st) != std::string::npos) {
                             cout << setw(20) << left << "Separator" << toks << setw(20) << right << endl;
                             //Send to output file
                             out << setw(20) << left << "Separator" << toks << setw(20) << right << endl;
+                            
+                            new_token->type = 5;
+                            new_token->lexeme = toks;
+                            if (head == nullptr) {
+                                head = current;
+                                follow = head;
+                                curr = head;
+                            }
+                            else {
+                                follow->next = current;
+                                current->prev = follow;
+                                follow = current;
+                            }
                         }
                         st = cc = f;
                         go = first;
@@ -472,463 +668,630 @@ void lex(char *buffer, ofstream &out) {
     
 }//End Lex
 
-void parser(Token before, Token curr, Token after){
-  do{
-    switch(curr.type){
-        //case for identifiers
-        case 0:
-            //if before is "function" or "int" or "boolean" or "real" or "{" or "+" or "-" or "/" or "*"
-            if (before.lexeme == "function" || before.lexeme == "int" || before.lexeme == "boolean" || before.lexeme == "real" || before.lexeme == "{" || before.lexeme == "+" || before.lexeme == "-" || before.lexeme == "/" || before.lexeme == "*") {
-                //if after is "," or "=" or "}
-                if(after.lexeme == "," || after.lexeme == "=" || after.lexeme == "}"){
-                    if(before.lexeme == "function")
-                        cout << "<Function Definitions'> -> <Function> <Function Definitions'>\n" << "<Function> -> function <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>\n";
-                    //if before is "int", "boolean", or "real"
-                    else if(before.lexeme == "int" || before.lexeme == "boolean" || before.lexeme == "real"){
-                        if (after.lexeme == ",")
-                        cout << "<Decleration List'> -> <Decleration>\n" << "<Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>, <IDs>\n";
-                        else
-                           cout << "<Decleration List'> -> <Decleration>\n" << "<Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>\n";
+
+void parser() {
+    
+    before = after = curr;
+    do {
+        after = curr->next;
+        switch (curr->type) {
+                //case for identifiers
+            case 0:
+                    //if before is "function"
+                if (before->lexeme == "function"){
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Function Definitions'> -> <Function> <Function Definitions'>\n" << "   <Function> -> function <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>\n";
+                }
+                //if before is "int", "boolean", or "real"
+                else if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                    if (after->lexeme == ","){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Decleration List'> -> <Decleration>\n" << "    <Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>, <IDs>\n";
                     }
-                    //before is -
-                    else if(before.lexeme == "-"){
-                        cout << "<Factor> -> - <Primary>\n" << "<Primary> -> <Identifier>\n";
-                    }
-                    //before is /
-                    else if(before.lexeme == "/"){
-                        cout << "<Term''> -> /<Factor><Term''>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
-                    }
-                    //before is *
-                    else if(before.lexeme == "*"){
-                        cout << "<Term'> - > *<Factor><Term'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
-                    }
-                    //before is +
-                    else if(before.lexeme == "+"){
-                        cout << "<Expression'> -> +<Term> <Expression'>\n" << "<Term> -> <Factor><Term'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
-                    }
-                    //before is = or < or >
-                    else if(before.lexeme == "=" || before.lexeme == "<" || before.lexeme == ">"){
-                        cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Expression> -> <Term> <Expression'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
+                    else{
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Decleration List'> -> <Decleration>\n" << "    <Decleration> -> <int | boolean | real > <IDs>\n" << "<IDs> -> <Identifier>\n";
                     }
                 }
-                else{
-                    cout << "Invalid token, no production identified for: " << curr.lexeme << " lexeme of token type: " << curr.type << endl;
+                //before is -
+                else if (before->lexeme == "-") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Factor> -> - <Primary>\n" << " <Primary> -> <Identifier>\n";
                 }
-            }
-            //error message
-            else{
-                cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-            }
-            break;
-            
-        //case for real
-        case 1:
-            //before is -
-            if(before.lexeme == "-"){
-                cout << "<Factor> -> - <Primary>\n" << "<Primary> -> <Real>\n";
-            }
-            //before is /
-            else if(before.lexeme == "/"){
-                cout << "<Term''> -> /<Factor><Term''>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Real>\n";
-            }
-            //before is *
-            else if(before.lexeme == "*"){
-                cout << "<Term'> - > *<Factor><Term'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Real>\n";
-            }
-            //before is +
-            else if(before.lexeme == "+"){
-                cout << "<Expression'> -> +<Term> <Expression'>\n" << "<Term> -> <Factor><Term'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Real>\n";
-            }
-            //before is = or < or >
-            else if(before.lexeme == "=" || before.lexeme == "<" || before.lexeme == ">"){
-                cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Expression> -> <Term> <Expression'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Real>\n";
-            }
-            //error message
-            else {
-                cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-            }
-            break;
-            
-        //case for integers
-        case 2:
-            //before is -
-            if(before.lexeme == "-"){
-                cout << "<Factor> -> - <Primary>\n" << "<Primary> -> <Integer>\n";
-            }
-            //before is /
-            else if(before.lexeme == "/"){
-                cout << "<Term''> -> /<Factor><Term''>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Integer>\n";
-            }
-            //before is *
-            else if(before.lexeme == "*"){
-                cout << "<Term'> - > *<Factor><Term'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Integer>\n";
-            }
-            //before is +
-            else if(before.lexeme == "+"){
-                cout << "<Expression'> -> +<Term> <Expression'>\n" << "<Term> -> <Factor><Term'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Integer>\n";
-            }
-            //before is = or < or >
-            else if(before.lexeme == "=" || before.lexeme == "<" || before.lexeme == ">"){
-                cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Expression> -> <Term> <Expression'>\n" << "<Factor> -> <Primary>\n" << "<Primary> -> <Integer>\n";
-            }
-            else {
-                cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                //before is /
+                else if (before->lexeme == "/") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term''> -> /<Factor><Term''>\n" << "   <Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
+                }
+                //before is *
+                else if (before->lexeme == "*") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term'> - > *<Factor><Term'>\n" << "    <Factor> -> <Primary>\n" << "<Primary> -> <Identifier>\n";
+                }
+                //before is +
+                else if (before->lexeme == "+") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Expression'> -> +<Term> <Expression'>\n" << "  <Term> -> <Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
+                }
+                //before is = or < or >
+                else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
+                }
+                else {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
+                }
+                break;
                 
-            }
-            break;
-            
-        //case for keywords
-        case 3:
-            //return
-            if(curr.lexeme == "return"){
-                    if(before.lexeme == "-" || after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 ||after.lexeme == "true" || after.lexeme == "false"){
-                        cout << "Statement> -> <Return>\n" << "<Return> -> return; <Expression>\n";
-                    }
-                    else {
-                         cout << "<Statement> -> <Return>\n" << "<Return> -> return;\n";
-                    }
+                //case for real
+            case 1:
+                //before is -
+                if (before->lexeme == "-") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
-            // function
-            else if (curr.lexeme == "function"){
-                if (after.type == 0){
-                  cout << "<Function Definitions’> -> <Function> <Function Definition’>\n" << "<Function> -> function  <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>";
+                //before is /
+                else if (before->lexeme == "/") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term''> -> /<Factor><Term''>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
-                else{
-                    cout << "Invalid token, no production identified for: " << curr.lexeme << " lexeme of token type: " << curr.type << endl;
+                //before is *
+                else if (before->lexeme == "*") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term'> - > *<Factor><Term'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
-            }
-            // int
-            else if (curr.lexeme == "int"){
-                if (before.lexeme == ":"){
-                    cout << "<Parameter> -> <IDs> : <Qualifier>\n" << "<Qualifier> -> int\n";
+                //before is +
+                else if (before->lexeme == "+") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Expression'> -> +<Term> <Expression'>\n" << "   <Term> -> <Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
-                else{
-                    cout << "Invalid token, no production identified for: " << curr.lexeme << " lexeme of token type: " << curr.type << endl;
-                }
-            }
-            // boolean
-            else if (curr.lexeme == "boolean"){
-                if (before.lexeme == ":"){
-                    cout << "<Parameter> -> <IDs> : <Qualifier>\n" << "<Qualifier> -> boolean\n";
-                }
-                else{
-                    cout << "Invalid token, no production identified for: " << curr.lexeme << " lexeme of token type: " << curr.type << endl;
-                }
-            }
-            // real
-            else if (curr.lexeme == "real"){
-                //if before is :
-                if (before.lexeme == ":"){
-                    cout << "<Parameter> -> <IDs> : <Qualifier>\n" << "<Qualifier> -> real\n";
-                }
-                //if after is identifier
-                else if (after.type == 0){
-                    cout << "<Declaration List> -> <Declaration>; <Declaration List'>\n" << "<Declaration> -> real <IDs>\n";
+                //before is = or < or >
+                else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Real>\n";
                 }
                 //error message
                 else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                    cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                 }
-            }
-            //if
-            else if (curr.lexeme == "if"){
-                cout << "\n";
-            }
-            else if (curr.lexeme == "endif"){
-                cout << "\n";
-            }
-            else if (curr.lexeme == "else"){
-                cout << "\n";
-            }
-            // put
-            else if (curr.lexeme == "put"){
-                if (after.lexeme == "("){
-                    cout << "<Statement> -> <Print>\n" << "<Print> -> put (<Expression>);\n";
+                break;
+                
+                //case for integers
+            case 2:
+                //before is -
+                if (before->lexeme == "-") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                //before is /
+                else if (before->lexeme == "/") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term''> -> /<Factor><Term''>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
-            }
-            // get
-            else if (curr.lexeme == "get"){
-                if (after.lexeme == "("){
-                    cout << "<Statement> -> <Scan>\n" << "<Scan> -> get (<IDs>);\n";
+                //before is *
+                else if (before->lexeme == "*") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Term'> - > *<Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                //before is +
+                else if (before->lexeme == "+") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Expression'> -> +<Term> <Expression'>\n" << "   <Term> -> <Factor><Term'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
-            }
-            // while
-            else if (curr.lexeme == "while"){
-                if (after.lexeme == "("){
-                    cout << "<Statement> -> <While>\n" << "<While> -> while (<Condition>) <Statement>\n";
+                //before is = or < or >
+                else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Expression> -> <Term> <Expression'>\n" << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Integer>\n";
                 }
                 else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                    cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                    cout << "   <Factor>-> <Primary>\n" << "    <Primary> -> <Integer>\n";
                 }
-            }
-            // true
-            else if (curr.lexeme == "true"){
-                if(before.lexeme == "-")
-                    cout << "<Factor> -> - <Primary>\n" << "<Primary> -> true\n";
-                else
-                    cout << "<Factor> -> <Primary>\n" << "<Primary> -> true\n";
-            }
-            // false
-            else if (curr.lexeme == "false"){
-                if(before.lexeme == "-")
-                    cout << "<Factor> -> - <Primary>\n" << "<Primary> -> false\n";
-                else
-                    cout << "<Factor> -> <Primary>\n" << "<Primary> -> false\n";
-            }
-            break;
-            
-        //case for operators "+-*/"
-        case 4:
-            // +
-            if(curr.lexeme == "+"){
-               //check if before and after is term
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false"){
-                    if(after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 || after.lexeme == "true" || after.lexeme == "false"){
-                        cout << "<Expression> -> <Term> <Expression'>\n" << "<Expression'> -> +<Term><Expression'>\n";
+                break;
+                
+                //case for keywords
+            case 3:
+                //return
+                if (curr->lexeme == "return") {
+                    if (before->lexeme == "-" || after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   Statement> -> <Return>\n" << "   <Return> -> return; <Expression>\n";
+                    }
+                    else if(after->lexeme == ";"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <Return>\n" << "   <Return> -> return;\n";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
                     }
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // -
-            else if (curr.lexeme == "-"){
-                //check if before and after is term or primary
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false"){
-                    if(after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 || after.lexeme == "true" || after.lexeme == "false"){
-                        cout << "<Expression> -> <Term> <Expression''>\n" << "<Expression''> -> -<Term> <Expression'>\n";
+                // function
+                else if (curr->lexeme == "function") {
+                    if (after->type == 0) {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Function Definitions> -> <Function> <Function Definition>\n" << "   <Function> -> function  <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
                     }
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // *
-            else if (curr.lexeme == "*"){
-                //check if before and after is factor/primary
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false"){
-                    if(after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 || after.lexeme == "true" || after.lexeme == "false"){
-                        cout << "<Term> -> <Factor> <Term'>\n" << "<Term'> -> *<Factor><Term'>\n";
+                // int
+                else if (curr->lexeme == "int") {
+                    if (before->lexeme == ":") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "  <Parameter> -> <IDs> : <Qualifier>\n" << "  <Qualifier> -> int\n";
+                    }
+                    else if(after->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Declaration List>-> <Declaration>\n" << "  <Declaration> -> <int> <IDs>\n";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
                     }
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // /
-            else if (curr.lexeme == "/"){
-                //check if after is factor
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false"){
-                    if(after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 || after.lexeme == "true" || after.lexeme == "false"){
-                        cout << "<Term> -> <Factor> <Term''>\n" << "<Term'> -> /<Factor><Term''>\n";
+                // boolean
+                else if (curr->lexeme == "boolean") {
+                    if (before->lexeme == ":") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Parameter> -> <IDs> : <Qualifier>\n" << "   <Qualifier> -> boolean\n";
+                    }
+                    else if(after->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Declaration List>-> <Declaration>\n" << "  <Declaration> -> <boolean> <IDs>\n";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
                     }
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                // real
+                else if (curr->lexeme == "real") {
+                    //if before is :
+                    if (before->lexeme == ":") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Parameter> -> <IDs> : <Qualifier>\n" << "   <Qualifier> -> real\n";
+                    }
+                    //if after is identifier
+                    else if (after->type == 0) {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Declaration List> -> <Declaration>; <Declaration List'>\n" << "   <Declaration> -> real <IDs>\n";
+                    }
+                    //error message
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
                 }
-            }
-            //compound ops "=<>^"
-            // =
-            else if (curr.lexeme == "="){
-                //check if before is expression, or after is also "=" or ">" or "<" or if after is expression
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false" || before.lexeme =="=" || before.lexeme == "^"){
-                    if(after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 || after.lexeme == "true" || after.lexeme == "false" || after.lexeme == "=" || after.lexeme == "<" || after.lexeme == ">"){
-                        // ==
-                        if(before.lexeme == "=" || after.lexeme == "=")
-                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> ==\n";
-                        // ^=
-                        else if (before.lexeme == "^")
-                            cout << "Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> ^=\n";
-                        // =>
-                        else if (after.lexeme == ">")
-                            cout << "Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =>\n";
-                        // =<
-                        else if (after.lexeme == "<")
-                            cout << "Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =<\n";
+                //if
+                else if (curr->lexeme == "if") {
+                    if(after->lexeme == "("){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <If>\n" << "   <If> -> if(<Condition>) <Statement><If'>\n";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                     }
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // <
-            else if (curr.lexeme == "<"){
-                //check if before and after are expressions
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false" || before.lexeme == "="){
-                    if(after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 || after.lexeme == "true" || after.lexeme == "false"){
-                        // =<
-                        if(before.lexeme == "=")
-                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =<\n";
-                        // <
-                        else
-                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> <\n";
+                //endif
+                else if (curr->lexeme == "endif") {
+                    if(before->lexeme == "}" || before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "="){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <If> -> if(<Condition>) <Statement><If'>\n" << "   <If'> -> endif\n";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                     }
                 }
-                else {
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // >
-            else if (curr.lexeme == ">"){
-                //check if before and after are expressions
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false" || before.lexeme == "="){
-                    if(after.type == 0 || after.type == 2 || after.lexeme == "(" || after.type == 1 || after.lexeme == "true" || after.lexeme == "false"){
-                        // =<
-                        if(before.lexeme == "=")
-                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> =>\n";
-                        // <
-                        else
-                            cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> >\n";
+                
+                //else
+                else if (curr->lexeme == "else") {
+                    if(before->lexeme == "}" || before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "="){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <If> -> if(<Condition>) <Statement><If'>\n" << "   <If'> -> else <Statement> endif\n";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                     }
                 }
-            }
-            // ^
-            else if (curr.lexeme == "^"){
-                //check if before is expression and after is '='
-                if(before.type == 0 || before.type == 2 || before.lexeme == "(" || before.type == 1 || before.lexeme == "true" || before.lexeme == "false"){
-                    if(after.lexeme == "="){
-                        // ^=
-                        cout << "<Condition> -> <Expression> <Relop> <Expression>\n" << "<Relop> -> ^=\n";
+                // put
+                else if (curr->lexeme == "put") {
+                    if (after->lexeme == "(") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <Print>\n" << "   <Print> -> put (<Expression>);\n";
                     }
                     else {
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                     }
                 }
-            }
-            break;
-            
-        //case for seperators "[]{}():;,"
-        case 5:
-            // [
-            if (curr.lexeme == "["){
-                if(before.type == 0){
-                    if(after.lexeme == "]" || after.type == 0 ){
-                        cout << "<Function Definitions'> -> <Function><Function Definitions'>\n" << "<Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
+                // get
+                else if (curr->lexeme == "get") {
+                    if (after->lexeme == "(") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <Scan>\n" << "    <Scan> -> get (<IDs>);\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                // while
+                else if (curr->lexeme == "while") {
+                    if (after->lexeme == "(") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <While>\n" << "   <While> -> while (<Condition>) <Statement>\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                // true
+                else if (curr->lexeme == "true") {
+                    if (before->lexeme == "-"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> true\n";
                     }
                     else{
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> true\n";
                     }
                 }
-            }
-            // ]
-            else if (curr.lexeme == "]"){
-                if(before.lexeme == "[" || before.type == 0){
-                    if(after.lexeme == "int" || after.lexeme == "boolean" || after.lexeme == "real"){
-                        cout << "<Function Definitions'> -> <Function><Function Definitions'>\n" << "<Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
-                    }
-                    else{
-                        cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                    }
-                }
-                else{
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // {
-            else if (curr.lexeme == "{"){
-                if(after.type == 0 || after.lexeme == "endif" || after.lexeme == "return" || after.lexeme == "put" || after.lexeme  == "while" || before.lexeme == "int" || before.lexeme == "boolean" || before.lexeme == "real"){
-                    if(before.lexeme == "int" || before.lexeme == "boolean" || before.lexeme == "real"){
-                        cout << "<Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration> <Body>\n" << "<Body> -> {<Statement List>}\n";
+                // false
+                else if (curr->lexeme == "false") {
+                    if (before->lexeme == "-"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Factor> -> - <Primary>\n" << "   <Primary> -> false\n";
                     }
                     else{
-                        cout << "<Statement> -> <Compound>\n" << "<Compound> -> {<Statement List>}\n";
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> false\n";
                     }
                 }
-                else{
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // }
-            else if (curr.lexeme == "}"){
-                if(before.type == 0 || before.lexeme == "endif" || before.lexeme == "return" || before.lexeme == "put" || before.lexeme  == "while"){
-                        cout << "<Statement> -> <Compound>\n" << "<Compound> -> {<Statement List>}\n";
-                }
-                else{
-                    cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-                }
-            }
-            // (
-            else if (curr.lexeme == "("){
-                if(before.lexeme == "put" || before.lexeme == "get" || before.lexeme == "while"){
-                    if(before.lexeme == "put"){
-                        //if after is an identifier or an expression
-                        if(after.lexeme == "+" || after.lexeme == "-" || after.lexeme == "*" || after.lexeme == "/" || after.type == 0)
-                            cout << "<Statement> -> <Print>\n" << "<Print> -> put(<Expression>);\n";
+                break;
+                
+                //case for operators "+-*/"
+            case 4:
+                // +
+                if (curr->lexeme == "+") {
+                    //check if before and after is term
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
+                        if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Expression> -> <Term> <Expression'>\n" << "   <Expression'> -> +<Term><Expression'>\n";
+                        }
+                        else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
                     }
-                    else if(before.lexeme == "get"){
-                        //if after is an Identifier
-                        if(after.type == 0)
-                            cout << "<Statement> -> <Scan>\n" << "<Scan> -> get(<IDs>);\n";
-                    }
-                    else if(before.lexeme == "while"){
-                        //if after is an expression or identifier
-                        if(after.lexeme == "+" || after.lexeme == "-" || after.lexeme == "*" || after.lexeme == "/" || after.type == 0)
-                            cout << "<Statement> -> <While>\n" << "<While> -> while(<Condition>)<Statement>\n";
+                    else {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
                     }
                 }
-                //if after is an expression
-                else if(after.lexeme == "+" || after.lexeme == "-" || after.lexeme == "*" || after.lexeme == "/"){
-                    cout << "<Factor> -> <Primary>\n" << "<Primary> -> (<Expression>)\n";
+                // -
+                else if (curr->lexeme == "-") {
+                    //check if before and after is term or primary
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
+                        if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Expression> -> <Term> <Expression''>\n" << "   <Expression''> -> -<Term> <Expression'>\n";
+                        }
+                        else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
                 }
-                //if before and after is an identifier
-                else if (after.type == 0 && before.type == 0){
-                    cout << "<Factor> -> <Primary>\n" << "<Primary> -> <Identifier><Primary'>\n" << "<Primary'> -> (<IDs>)\n";
+                // *
+                else if (curr->lexeme == "*") {
+                    //check if before and after is factor/primary
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
+                        if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Term> -> <Factor> <Term'>\n" << "   <Term'> -> *<Factor><Term'>\n";
+                        }
+                        else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
                 }
-            }
-            else if (curr.lexeme == ")"){
-                cout << "\n";
-            }
-            else if (curr.lexeme == ":"){
-                cout << "\n";
-            }
-            else if (curr.lexeme == ";"){
-                cout << "\n";
-            }
-            else if (curr.lexeme == ","){
-                cout << "\n";
-            }
-            //compound seperators "%"
-            else if (curr.lexeme == "%"){
-                cout << "\n";
-            }
-            else {
-                cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-            }
-            break;
-        default: cout << "Invalid token, no production identified for: '" << curr.lexeme << "' lexeme of token type: " << curr.type << "on line: " << curr.line << endl;
-    }//End switch
-  } while (curr.next != NULL); //End while
+                // /
+                else if (curr->lexeme == "/") {
+                    //check if after is factor
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
+                        if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Term> -> <Factor> <Term''>\n" << "   <Term'> -> /<Factor><Term''>\n";
+                        }
+                        else {
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                //compound ops "=<>^"
+                // =
+                else if (curr->lexeme == "=") {
+                    //check if before is expression, or after is also "=" or ">" or "<" or if after is expression
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "=" || before->lexeme == "^") {
+                        if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false" || after->lexeme == "=" || after->lexeme == "<" || after->lexeme == ">") {
+                            // ==
+                            if (before->lexeme == "=" || after->lexeme == "="){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ==\n";
+                            }
+                            // ^=
+                            else if (before->lexeme == "^"){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ^=\n";
+                            }
+                            // =>
+                            else if (after->lexeme == ">"){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =>\n";
+                            }
+                            // =<
+                            else if (after->lexeme == "<"){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
+                            }
+                        }
+                        else {
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                // <
+                else if (curr->lexeme == "<") {
+                    //check if before and after are expressions
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "=") {
+                        if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            // =<
+                            if (before->lexeme == "="){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
+                            }
+                            // <
+                            else{
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> <\n";
+                            }
+                        }
+                        else {
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                // >
+                else if (curr->lexeme == ">") {
+                    //check if before and after are expressions
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "=") {
+                        if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                            // =<
+                            if (before->lexeme == "="){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =>\n";
+                            }
+                            // <
+                            else{
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> >\n";
+                            }
+                        }
+                        else {
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                }
+                // ^
+                else if (curr->lexeme == "^") {
+                    //check if before is expression and after is '='
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
+                        if (after->lexeme == "=") {
+                            // ^=
+                            cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ^=\n";
+                        }
+                        else {
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                }
+                break;
+                
+                //case for seperators "[]{}():;,"
+            case 5:
+                // [
+                if (curr->lexeme == "[") {
+                    if (before->type == 0) {
+                        if (after->lexeme == "]" || after->type == 0) {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Function Definitions'> -> <Function><Function Definitions'>\n" << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
+                        }
+                        else {
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                }
+                // ]
+                else if (curr->lexeme == "]") {
+                    if (before->lexeme == "[" || before->type == 0) {
+                        if (after->lexeme == "int" || after->lexeme == "boolean" || after->lexeme == "real") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Function Definitions'> -> <Function><Function Definitions'>\n" << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
+                        }
+                        else {
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                // {
+                else if (curr->lexeme == "{") {
+                    if (after->type == 0 || after->lexeme == "endif" || after->lexeme == "return" || after->lexeme == "put" || after->lexeme == "while" || before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                        if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration> <Body>\n" << "   <Body> -> {<Statement List>}\n";
+                        }
+                        else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Statement> -> <Compound>\n" << "   <Compound> -> {<Statement List>}\n";
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                // }
+                else if (curr->lexeme == "}") {
+                    if (before->type == 0 || before->lexeme == "endif" || before->lexeme == "return" || before->lexeme == "put" || before->lexeme == "while") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <Compound>\n" << "   <Compound> -> {<Statement List>}\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                // (
+                else if (curr->lexeme == "(") {
+                    if (before->lexeme == "put" || before->lexeme == "get" || before->lexeme == "while") {
+                        if (before->lexeme == "put") {
+                            //if after is an identifier or an expression
+                            if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/" || after->type == 0){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Statement> -> <Print>\n" << "   <Print> -> put(<Expression>);\n";
+                            }
+                        }
+                        else if (before->lexeme == "get") {
+                            //if after is an Identifier
+                            if (after->type == 0){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Statement> -> <Scan>\n" << "   <Scan> -> get(<IDs>);\n";
+                            }
+                        }
+                        else if (before->lexeme == "while") {
+                            //if after is an expression or identifier
+                            if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/" || after->type == 0){
+                                cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                                cout << "   <Statement> -> <While>\n" << "   <While> -> while(<Condition>)<Statement>\n";
+                            }
+                        }
+                    }
+                    //if after is an expression
+                    else if (after->lexeme == "+" || after->lexeme == "-" || after->lexeme == "*" || after->lexeme == "/") {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> (<Expression>)\n";
+                    }
+                    //if before and after is an identifier
+                    else if (after->type == 0 && before->type == 0) {
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier><Primary'>\n" << "   <Primary'> -> (<IDs>)\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                else if (curr->lexeme == ")") {
+                    //if before is an expression
+                    if (before->lexeme == "true" || before->lexeme == "false" || before->type == 2 || before->type == 1){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Factor> -> <Primary>\n" << "   <Primary> -> (<Expression>)\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                else if (curr->lexeme == ":") {
+                    // before is an identifier and after is a qualifier
+                    if(before->type == 0){
+                        if(after->lexeme == "int" || after->lexeme == "boolean" || after->lexeme == "real"){
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "   <Parameter List> -> <Parameter> <Paramater List'>\n" << "   <Parameter> -> <IDs> : <Qualifier>\n";
+                        }
+                        else {
+                            cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                        }
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                    
+                }
+                else if (curr->lexeme == ";") {
+                    //before is a delcaration
+                    if(before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real" || before->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Opt Declaration List> -> <Declaration List>\n" << "    <Declaration List> -> <Decleration>;<Declaration List'>\n";
+                    }
+                    //before is end parenthesis
+                    else if(before->lexeme == ")"){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement> -> <Print>\n" << "  <Print> -> put(<Expression>);\n";
+                    }
+                    //before is expression
+                    else if(before->lexeme == "true" || before->lexeme == "false" || before->type == 2 || before->type == 1){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <Statement>-> <Assign>\n" << "  <Assign> -><Identifier> = <Expression>;\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                else if (curr->lexeme == ",") {
+                    //if before or after is an identifier
+                    if(before->type == 0 || after->type == 0){
+                        cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
+                        cout << "   <IDs> -> <ID's>\n" << " <IDs'> -> <Identifier>,<IDs'>\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                    
+                }
+                //compound seperators "%"
+                else if (curr->lexeme == "%") {
+                    //if before or after is %
+                    if(before->lexeme == "%" || after->lexeme == "%"){
+                        cout << "   Rat18s> -> <Opt Function Definitions> %% <Opt Declaration List> <Statement List>\n";
+                    }
+                    else {
+                        cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+                    }
+                }
+                break;
+                
+            default: cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
+        }//End switch
+        
+        curr = curr->next;
+        before = curr->prev;
+        
+    } while (curr->next != NULL); //End while
 }//End Synt
 
 
-
+void abc() {
+    Token *check = head;
+    while (check->next != nullptr) {
+        cout << check->lexeme << "   " << check->type << endl;
+        check = check->next;
+    }
+}
 int main() {
     
     cout << endl;
@@ -947,8 +1310,13 @@ int main() {
     char* strp;
     strp = &message[0];
     out << message << endl << endl;
+    
     //Pass the pointer to the lex function
-    lex(strp,out);
+    lex(strp, out);
+    parser();
+    
+    cout << endl << endl;
+    abc();
     
     cout << endl << endl;
     system("Pause");
