@@ -1,5 +1,6 @@
 //Names: Dhvanil Shah
 //       Ruby Abutaleb
+//       Mike Kaminski
 //Due Date: 4/9/2018
 //Class: CPSC-323-04
 //Project 2
@@ -796,7 +797,7 @@ void parser() {
                 if (curr->lexeme == "return") {
                     if (before->lexeme == "-" || after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
                         cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                        cout << "   Statement> -> <Return>\n" << "   <Return> -> return; <Expression>\n";
+                        cout << "   <Statement> -> <Return>\n" << "   <Return> -> return; <Expression>\n";
                     }
                     else if(after->lexeme == ";"){
                         cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
@@ -1030,17 +1031,17 @@ void parser() {
                             // ^=
                             else if (before->lexeme == "^"){
                                 cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ^=\n";
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> ^=\n";
                             }
                             // =>
                             else if (after->lexeme == ">"){
                                 cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =>\n";
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =>\n";
                             }
                             // =<
                             else if (after->lexeme == "<"){
                                 cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                                cout << "   Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
+                                cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
                             }
                         }
                         else {
@@ -1267,7 +1268,7 @@ void parser() {
                 else if (curr->lexeme == "%") {
                     //if before or after is %
                     if(before->lexeme == "%" || after->lexeme == "%"){
-                        cout << "   Rat18s> -> <Opt Function Definitions> %% <Opt Declaration List> <Statement List>\n";
+                        cout << "   <Rat18s> -> <Opt Function Definitions> %% <Opt Declaration List> <Statement List>\n";
                     }
                     else {
                         cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
