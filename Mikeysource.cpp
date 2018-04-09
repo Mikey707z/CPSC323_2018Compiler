@@ -675,7 +675,7 @@ void lex(char *buffer, ofstream &out) {
 
 
 void parser() {
-     curr = head;
+    curr = head;
     before = after = curr;
     do {
         after = curr->next;
@@ -685,7 +685,7 @@ void parser() {
                     //if before is "function"
                 if (before->lexeme == "function"){
                     cout <<  setw(30) << left << "Token: " << curr->type << " Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                    cout << "   <Function Definitions'> -> <Function> <Function Definitions'>\n" << "   <Function> -> function <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>\n";
+                    cout << "   <Function Definitions'> -> <Function> <Function Definitions'>\n" << "<Function> -> function <Identifier>  \n";
                 }
                 //if before is "int", "boolean", or "real"
                 else if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
@@ -732,6 +732,11 @@ void parser() {
                 else if (before->lexeme == "=" || before->lexeme == "<" || before->lexeme == ">") {
                     cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                     cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
+                }
+                else if (before->lexeme == ",") {
+                     cout << setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
+                     cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
+
                 }
                 else {
                     cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
@@ -825,7 +830,7 @@ void parser() {
                 else if (curr->lexeme == "function") {
                     if (after->type == 0) {
                         cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                        cout << "   <Function Definitions> -> <Function> <Function Definition>\n" << "   <Function> -> function  <Identifier>  [ <Opt Parameter List> ]  <Opt Declaration List>  <Body>" << endl;
+                        cout << "   <Function Definitions> -> <Function> <Function Definition>\n" << "   <Function> -> function" << endl;
                     }
                     else {
                         cout << "Invalid token, no production identified for: " << curr->lexeme << " lexeme of token type: " << curr->type << endl;
@@ -1133,7 +1138,7 @@ void parser() {
                     if (before->type == 0) {
                         if (after->lexeme == "]" || after->type == 0) {
                             cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                            cout << "   <Function Definitions'> -> <Function><Function Definitions'>\n" << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
+                            cout << "   <Function Definitions'> -> <Function><Function Definitions'>\n" << "   <Function> -> function <Identifier> [<Opt Parameter List>]\n";
                         }
                         else {
                             cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
@@ -1143,13 +1148,9 @@ void parser() {
                 // ]
                 else if (curr->lexeme == "]") {
                     if (before->lexeme == "[" || before->type == 3) {
-                        if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
                             cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Function Definitions'> -> <Function><Function Definitions'>\n" << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration List> <Body>\n";
-                        }
-                        else {
-                            cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
-                        }
+                       
                     }
                     else {
                         cout << "Invalid token, no production identified for: '" << curr->lexeme << "' lexeme of token type: " << curr->type << "on line: " << curr->line << endl;
@@ -1157,8 +1158,8 @@ void parser() {
                 }
                 // {
                 else if (curr->lexeme == "{") {
-                    if (after->type == 0 || after->lexeme == "endif" || after->lexeme == "return" || after->lexeme == "put" || after->lexeme == "while" || before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
-                        if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                    if (after->type == 0 || after->type == 3 || after->lexeme == "endif" || after->lexeme == "return" || after->lexeme == "put" || after->lexeme == "while" || before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
+                        if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real" || before->lexeme == "]") {
                             cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Function> -> function <Identifier> [<Opt Parameter List>]<Opt Declaration> <Body>\n" << "   <Body> -> {<Statement List>}\n";
                         }
