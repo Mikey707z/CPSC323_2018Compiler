@@ -221,12 +221,13 @@ void lex(char *buffer, ofstream &out) {
 
 				new_token->type = 3;
 				new_token->lexeme = toks;
+
 				if (head == nullptr) {
 					head = current;
 					follow = head;
 					curr = head;
 				}
-				else if (follow == head) {
+				else {
 					follow->next = current;
 					current->prev = follow;
 					follow = current;
@@ -246,7 +247,7 @@ void lex(char *buffer, ofstream &out) {
 					follow = head;
 					curr = head;
 				}
-				else if (follow == head) {
+				else {
 					follow->next = current;
 					current->prev = follow;
 					follow = current;
@@ -270,6 +271,7 @@ void lex(char *buffer, ofstream &out) {
 			cout << setw(20) << left << "Identifier" << toks << setw(20) << right << endl;
 			//Send to output file
 			out << setw(20) << left << "Identifier" << toks << setw(20) << right << endl;
+
 			new_token->type = 0;
 			new_token->lexeme = toks;
 
@@ -278,7 +280,7 @@ void lex(char *buffer, ofstream &out) {
 				follow = head;
 				curr = head;
 			}
-			else if (follow == head) {
+			else {
 				follow->next = current;
 				current->prev = follow;
 				follow = current;
@@ -354,7 +356,7 @@ void lex(char *buffer, ofstream &out) {
 						follow = head;
 						curr = head;
 					}
-					else if (follow == head) {
+					else {
 						follow->next = current;
 						current->prev = follow;
 						follow = current;
@@ -394,7 +396,7 @@ void lex(char *buffer, ofstream &out) {
 				follow = head;
 				curr = head;
 			}
-			else if (follow == head) {
+			else {
 				follow->next = current;
 				current->prev = follow;
 				follow = current;
@@ -441,7 +443,7 @@ void lex(char *buffer, ofstream &out) {
 							follow = head;
 							curr = head;
 						}
-						else if (follow == head) {
+						else {
 							follow->next = current;
 							current->prev = follow;
 							follow = current;
@@ -472,7 +474,7 @@ void lex(char *buffer, ofstream &out) {
 							follow = head;
 							curr = head;
 						}
-						else if (follow == head) {
+						else {
 							follow->next = current;
 							current->prev = follow;
 							follow = current;
@@ -498,7 +500,7 @@ void lex(char *buffer, ofstream &out) {
 							follow = head;
 							curr = head;
 						}
-						else if (follow == head) {
+						else {
 							follow->next = current;
 							current->prev = follow;
 							follow = current;
@@ -528,7 +530,7 @@ void lex(char *buffer, ofstream &out) {
 					follow = head;
 					curr = head;
 				}
-				else if (follow == head) {
+				else {
 					follow->next = current;
 					current->prev = follow;
 					follow = current;
@@ -556,7 +558,7 @@ void lex(char *buffer, ofstream &out) {
 							follow = head;
 							curr = head;
 						}
-						else if (follow == head) {
+						else {
 							follow->next = current;
 							current->prev = follow;
 							follow = current;
@@ -578,7 +580,7 @@ void lex(char *buffer, ofstream &out) {
 							follow = head;
 							curr = head;
 						}
-						else if (follow == head) {
+						else {
 							follow->next = current;
 							current->prev = follow;
 							follow = current;
@@ -609,7 +611,7 @@ void lex(char *buffer, ofstream &out) {
 							follow = head;
 							curr = head;
 						}
-						else if (follow == head) {
+						else {
 							follow->next = current;
 							current->prev = follow;
 							follow = current;
@@ -627,7 +629,7 @@ void lex(char *buffer, ofstream &out) {
 							follow = head;
 							curr = head;
 						}
-						else if (follow == head) {
+						else {
 							follow->next = current;
 							current->prev = follow;
 							follow = current;
@@ -1130,7 +1132,13 @@ void parser() {
 }//End Synt
 
 
-
+void abc() {
+	Token *check = head;
+	while (check->next != nullptr) {
+		cout << check->lexeme << "   " << check->type << endl;
+		check = check->next;
+	}
+}
 int main() {
 
 	cout << endl;
@@ -1153,6 +1161,9 @@ int main() {
 	//Pass the pointer to the lex function
 	lex(strp, out);
 	parser();
+
+	cout << endl << endl;
+	abc();
 
 	cout << endl << endl;
 	system("Pause");
