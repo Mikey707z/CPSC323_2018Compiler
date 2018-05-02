@@ -490,8 +490,7 @@ void lex(char *buffer, ofstream &out) {
                                 cout << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
                                 //Send to output file
                                 out << setw(20) << left << "Operator" << *cc << setw(20) << right << endl;
-                                cc++;
-                                go = first;
+                                
                                 
                                 
                                 
@@ -507,6 +506,9 @@ void lex(char *buffer, ofstream &out) {
                                     current->prev = follow;
                                     follow = current;
                                 }
+
+                                cc++;
+                                go = first;
                                 
                                 break;
                             }
@@ -684,8 +686,14 @@ void parser() {
             case 0:
                     //if before is "function"
                 if (before->lexeme == "function"){
-                    cout <<  setw(30) << left << "Token: " << curr->type << " Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                    cout << "   <Function Definitions'> -> <Function> <Function Definitions'>\n" << "<Function> -> function <Identifier>  \n";
+                   cout << setw(30) << left << "Token: " << curr->type << " Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
+                     cout << "   <Function Definitions'> -> <Function> <Function Definitions'>\n" << "<Function> -> function <Identifier>  \n"; 
+                }
+                // before is "return
+                else if (before->lexeme == "return")
+                {
+                     cout << setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
+                     cout << "   <Statement> -> <Return>\n" << "   <Return> -> return <Expression>\n";
                 }
                 //if before is "int", "boolean", or "real"
                 else if (before->lexeme == "int" || before->lexeme == "boolean" || before->lexeme == "real") {
@@ -737,6 +745,11 @@ void parser() {
                      cout << setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
                      cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "    <Expression> -> <Term> <Expression'>\n" << "    <Factor> -> <Primary>\n" << "   <Primary> -> <Identifier>\n";
 
+                }
+                // after is =
+                else if (after->lexeme == "=") {
+                     cout << setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
+                     cout << "   <Statement>-> <Assign>\n" << "  <Assign> -><Identifier> = <Expression>;\n";
                 }
                 else {
                     cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
@@ -814,9 +827,9 @@ void parser() {
             case 3:
                 //return
                 if (curr->lexeme == "return") {
-                    if (before->lexeme == "-" || after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
+                    if (before->lexeme == "{" || after->lexeme == "-" || after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
                         cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
-                        cout << "   <Statement> -> <Return>\n" << "   <Return> -> return; <Expression>\n";
+                        cout << "   <Statement> -> <Return>\n" << "   <Return> -> return <Expression>\n";
                     }
                     else if(after->lexeme == ";"){
                         cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
@@ -989,7 +1002,7 @@ void parser() {
                 // -
                 else if (curr->lexeme == "-") {
                     //check if before and after is term or primary
-                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false") {
+                    if (before->type == 0 || before->type == 2 || before->lexeme == "(" || before->type == 1 || before->lexeme == "true" || before->lexeme == "false" || before->lexeme == "return") {
                         if (after->type == 0 || after->type == 2 || after->lexeme == "(" || after->type == 1 || after->lexeme == "true" || after->lexeme == "false") {
                             cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                             cout << "   <Expression> -> <Term> <Expression''>\n" << "   <Expression''> -> -<Term> <Expression'>\n";
@@ -1061,6 +1074,11 @@ void parser() {
                             else if (after->lexeme == "<"){
                                 cout <<  setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n"<< setw(30) << left;
                                 cout << "   <Condition> -> <Expression> <Relop> <Expression>\n" << "   <Relop> -> =<\n";
+                            }
+                            else if (after->type == 0 || after->type == 2)
+                            {
+                                 cout << setw(30) << left << "Token: " << curr->type << "Lexeme: " << curr->lexeme << "\n" << setw(30) << left;
+                                 cout << "   <Statement>-> <Assign>\n" << "  <Assign> -><Identifier> = <Expression>;\n";
                             }
                         }
                         else {
@@ -1313,7 +1331,7 @@ int main() {
     cout << endl;
     //Create a ifstream variable
     
-    ifstream in("testcase1.txt");
+    ifstream in("testcase3.txt");
     ofstream out("outputcase.txt");
     //Create a string variable
     string message;
